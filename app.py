@@ -10,7 +10,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 .main-title {
-    font-size: 72px;
+    font-size: 92px;
     font-weight: 800;
     color: #00ADB5;
 }
