@@ -15,7 +15,7 @@ st.markdown("""
     color: #00ADB5;
 }
 .subtitle {
-    font-size: 18px;
+    font-size: 58px;
     color: gray;
 }
 .stButton>button {
