@@ -64,7 +64,7 @@ st.caption("Press the button to generate a FAST-style explanation.")
 st.divider()
 
 client = SambaNova(
-    api_key=SAMBANOVA_API_KEY,
+    api_key=os.getenv("SAMBANOVA_API_KEY"),
     base_url="https://api.sambanova.ai/v1",
 )
 
