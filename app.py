@@ -2,7 +2,7 @@ import streamlit as st
 import os
 from sambanova import SambaNova
 st.set_page_config(
-    page_title="FastGpt Exam Bro",
+    page_title="Exam Mind",
     page_icon="🎓",
     layout="wide"
 )
@@ -10,7 +10,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 .main-title {
-    font-size: 42px;
+    font-size: 72px;
     font-weight: 800;
     color: #00ADB5;
 }
