@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from sambanova import SambaNova
+from google import genai
 st.set_page_config(
     page_title="Exam Mind",
     page_icon="🎓",
@@ -64,9 +64,8 @@ teach_button = st.button("🚀 Teach Me Like FAST")
 st.caption("Press the button to generate a FAST-style explanation.")
 st.divider()
 
-client = SambaNova(
-    api_key=os.getenv("SAMBANOVA_API_KEY"),
-    base_url="https://api.sambanova.ai/v1",
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
 )
 
 base_prompt = """
@@ -140,8 +139,8 @@ if teach_button:
         try:
             with st.spinner("Preparing FAST-level academic content..."):
 
-                response = client.chat.completions.create(
-                    model="DeepSeek-V3.2",
+                response = client.models.generate_content(
+                    model="gemini-1.5-flash",
                     messages=[
                         {
                             "role": "system",
