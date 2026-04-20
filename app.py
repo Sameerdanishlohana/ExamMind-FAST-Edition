@@ -59,7 +59,7 @@ with st.sidebar:
     
     # Model selection for flexibility
     selected_model = st.selectbox("Brain Model", [
-        "google/gemma-4-31b-instruct", # The 2026 flagship Gemma
+         # The 2026 flagship Gemma
         "google/gemma-4-31b-it:free",    # Free option
         "deepseek/deepseek-chat"        # Good budget alternative
     ])
