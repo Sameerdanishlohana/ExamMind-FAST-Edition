@@ -1,7 +1,6 @@
 import streamlit as st
 import os
-from google import genai
-from google.genai import types
+from openai import OpenAI  # Using OpenAI SDK as requested
 
 st.set_page_config(
     page_title="Exam Mind | FAST Edition",
@@ -32,6 +31,7 @@ st.markdown("""
         border-radius: 12px;
         border-left: 5px solid #00ADB5;
         color: #E5E7EB;
+        line-height: 1.6;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -42,8 +42,11 @@ st.markdown('<p class="main-title">🎓 FAST NUCES AI Tutor</p>', unsafe_allow_h
 with st.sidebar:
     st.markdown("### ⚙️ Engine Room")
 
-    temperature = st.slider("Strictness Level", 0.0, 1.0, 0.4)
+    # Note: OpenRouter doesn't "think" via config, but models like Gemma 4 
+    # handle complex reasoning natively via prompt instructions.
+    temperature = st.slider("Strictness Level (Temp)", 0.0, 2.0, 0.7)
     max_tokens = st.slider("Content Depth", 500, 8000, 3000)
+    
     mode = st.selectbox("Pedagogy Style", 
         ["Full Deep Lecture", 
          "Scenario Practice Only", 
@@ -53,7 +56,13 @@ with st.sidebar:
     exam_type = st.radio("Mock Exam Simulator", 
         ["Mid-Term", "Final Exam"]
     )
-    enable_search = st.toggle("Enable Google Search Tool")
+    
+    # Model selection for flexibility
+    selected_model = st.selectbox("Brain Model", [
+        "google/gemma-4-31b-instruct", # The 2026 flagship Gemma
+        "google/gemma-2-9b-it:free",    # Free option
+        "deepseek/deepseek-chat"        # Good budget alternative
+    ])
 
 # ---------------- Main ----------------
 topic = st.text_input("📚 Subject / Topic Name", 
@@ -65,91 +74,55 @@ with col1:
 with col2:
     exam_button = st.button("📝 GENERATE MOCK EXAM")
 
-# ---------------- API KEY ----------------
-key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+# ---------------- API SETUP ----------------
+# Use OPENROUTER_API_KEY from secrets
+or_key = st.secrets.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
 
 if teach_button or exam_button:
-
-    if not key:
-        st.error("API Key not found! Add GEMINI_API_KEY to Streamlit secrets.")
+    if not or_key:
+        st.error("OpenRouter API Key not found!")
     elif not topic:
         st.warning("Please enter a topic.")
     else:
         try:
-            client = genai.Client(api_key=key)
-
-            # ---------------- SYSTEM PROMPT ----------------
-            if exam_button:
-                system_instruction = """
-                You are a strict FAST NUCES Karachi Examiner.
-                Exams are scenario-based and conceptual.
-                Include tricky MCQs and analytical questions.
-                """
-                user_prompt = f"""
-                Create a {exam_type} exam for:
-                {topic}
-
-                Include:
-                - MCQs with traps
-                - 2 scenario-based questions
-                - 1 long analytical question
-                """
-
-            else:
-                system_instruction = """
-                You are a brilliant FAST NUCES Professor.
-                Teach deeply and conceptually.
-                Use scenario-based explanations.
-                Assume exams are tough.
-                """
-                user_prompt = f"""
-                Explain {topic} in {mode} style.
-                Maintain FAST-level rigor.
-                """
-
-            # ---------------- CONTENT STRUCTURE ----------------
-            contents = [
-                types.Content(
-                    role="user",
-                    parts=[
-                        types.Part.from_text(text=user_prompt)
-                    ],
-                ),
-            ]
-
-            # ---------------- TOOLS (OPTIONAL) ----------------
-            tools = []
-            if enable_search:
-                tools.append(
-                    types.Tool(
-                        googleSearch=types.GoogleSearch()
-                    )
-                )
-
-            config = types.GenerateContentConfig(
-                temperature=temperature,
-                max_output_tokens=max_tokens,
-                system_instruction=system_instruction,
-                tools=tools,
-                thinking_config=types.ThinkingConfig(
-                    thinking_level="HIGH"
-                )
+            # Initialize OpenAI Client pointing to OpenRouter
+            client = OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=or_key,
+                default_headers={
+                    "HTTP-Referer": "http://localhost:8501", # Optional
+                    "X-Title": "Exam Mind Fast Edition",     # Optional
+                }
             )
 
-            # ---------------- STREAMING RESPONSE ----------------
+            # ---------------- PROMPTS ----------------
+            if exam_button:
+                sys_msg = "You are a strict FAST NUCES Karachi Examiner. Exams are scenario-based and analytical."
+                user_msg = f"Create a {exam_type} exam for: {topic}. Include tricky MCQs and 2 scenario questions."
+            else:
+                sys_msg = "You are a brilliant FAST NUCES Professor. Teach deeply with rigor."
+                user_msg = f"Explain {topic} in {mode} style. Use industry scenarios."
+
+            # ---------------- STREAMING ----------------
             st.markdown('<div class="response-box">', unsafe_allow_html=True)
             response_placeholder = st.empty()
-
             full_text = ""
 
             with st.spinner("Professor is thinking..."):
-                for chunk in client.models.generate_content_stream(
-                    model="gemini-2.0-flash-exp",
-                    contents=contents,
-                    config=config,
-                ):
-                    if chunk.text:
-                        full_text += chunk.text
+                response = client.chat.completions.create(
+                    model=selected_model,
+                    messages=[
+                        {"role": "system", "content": sys_msg},
+                        {"role": "user", "content": user_msg}
+                    ],
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    stream=True
+                )
+
+                for chunk in response:
+                    if chunk.choices[0].delta.content:
+                        full_text += chunk.choices[0].delta.content
                         response_placeholder.markdown(full_text)
 
             st.markdown('</div>', unsafe_allow_html=True)
