@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from openai import OpenAI  # Using OpenAI SDK as requested
+from openai import OpenAI 
 
 st.set_page_config(
     page_title="Exam Mind | FAST Edition",
@@ -8,7 +8,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- UI Styling ----------------
 st.markdown("""
 <style>
     .stApp { background-color: #0E1117; }
@@ -38,12 +37,8 @@ st.markdown("""
 
 st.markdown('<p class="main-title">🎓 FAST NUCES AI Tutor</p>', unsafe_allow_html=True)
 
-# ---------------- Sidebar ----------------
 with st.sidebar:
     st.markdown("### ⚙️ Engine Room")
-
-    # Note: OpenRouter doesn't "think" via config, but models like Gemma 4 
-    # handle complex reasoning natively via prompt instructions.
     temperature = st.slider("Strictness Level (Temp)", 0.0, 2.0, 0.7)
     max_tokens = st.slider("Content Depth", 500, 8000, 3000)
     
@@ -57,13 +52,11 @@ with st.sidebar:
         ["Mid-Term", "Final Exam"]
     )
     
-    # Model selection for flexibility
     selected_model = st.selectbox("Brain Model", [
         
-        "deepseek/deepseek-chat"        # Good budget alternative
+        "deepseek/deepseek-chat"       
     ])
 
-# ---------------- Main ----------------
 topic = st.text_input("📚 Subject / Topic Name", 
                       placeholder="e.g. Polymorphism in OOP")
 
@@ -73,8 +66,7 @@ with col1:
 with col2:
     exam_button = st.button("📝 GENERATE MOCK EXAM")
 
-# ---------------- API SETUP ----------------
-# Use OPENROUTER_API_KEY from secrets
+
 or_key = st.secrets.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
 
 if teach_button or exam_button:
@@ -84,7 +76,6 @@ if teach_button or exam_button:
         st.warning("Please enter a topic.")
     else:
         try:
-            # Initialize OpenAI Client pointing to OpenRouter
             client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=or_key,
@@ -94,7 +85,6 @@ if teach_button or exam_button:
                 }
             )
 
-            # ---------------- PROMPTS ----------------
             if exam_button:
                 sys_msg = "You are a strict FAST NUCES Karachi Examiner. Exams are scenario-based and analytical."
                 user_msg = f"Create a {exam_type} exam for: {topic}. Include tricky MCQs and 2 scenario questions."
@@ -102,7 +92,6 @@ if teach_button or exam_button:
                 sys_msg = "You are a brilliant FAST NUCES Professor. Teach deeply with rigor."
                 user_msg = f"Explain {topic} in {mode} style. Use industry scenarios."
 
-            # ---------------- STREAMING ----------------
             st.markdown('<div class="response-box">', unsafe_allow_html=True)
             response_placeholder = st.empty()
             full_text = ""
