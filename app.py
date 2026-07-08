@@ -1,6 +1,9 @@
 import streamlit as st
 import os
 from openai import OpenAI 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 st.set_page_config(
     page_title="Exam Mind | FAST Edition",
@@ -53,7 +56,8 @@ with st.sidebar:
     )
     
     selected_model = st.selectbox("Brain Model", [
-        
+        "gemini-3.5-flash",
+        "gemini-3.1-pro",
         "deepseek/deepseek-chat"       
     ])
 
@@ -68,22 +72,31 @@ with col2:
 
 
 or_key = st.secrets.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+gemini_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
 
 if teach_button or exam_button:
-    if not or_key:
-        st.error("OpenRouter API Key not found!")
+    if "gemini" in selected_model and not gemini_key:
+        st.error("Gemini API Key (GEMINI_API_KEY) not found!")
+    elif "deepseek" in selected_model and not or_key:
+        st.error("OpenRouter API Key (OPENROUTER_API_KEY) not found!")
     elif not topic:
         st.warning("Please enter a topic.")
     else:
         try:
-            client = OpenAI(
-                base_url="https://openrouter.ai/api/v1",
-                api_key=or_key,
-                default_headers={
-                    "HTTP-Referer": "http://localhost:8501", # Optional
-                    "X-Title": "Exam Mind Fast Edition",     # Optional
-                }
-            )
+            if "gemini" in selected_model:
+                client = OpenAI(
+                    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+                    api_key=gemini_key
+                )
+            else:
+                client = OpenAI(
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key=or_key,
+                    default_headers={
+                        "HTTP-Referer": "http://localhost:8501", 
+                        "X-Title": "Exam Mind Fast Edition",     
+                    }
+                )
 
             if exam_button:
                 sys_msg = "You are a strict FAST NUCES Karachi Examiner. Exams are scenario-based and analytical."
