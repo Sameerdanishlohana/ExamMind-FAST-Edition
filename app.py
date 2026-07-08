@@ -67,6 +67,8 @@ with st.sidebar:
             "gemini-2.5-pro",
             "gemini-3.5-flash"
         ])
+        
+        st.markdown("<br>" * 8, unsafe_allow_html=True)
     else:
         aspect_ratio = st.selectbox(
             "Aspect Ratio",
@@ -76,6 +78,8 @@ with st.sidebar:
             "Format",
             ["JPEG", "PNG"]
         )
+        
+        st.markdown("<br>" * 8, unsafe_allow_html=True)
 
 gemini_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
 
