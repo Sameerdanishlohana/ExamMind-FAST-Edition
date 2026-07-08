@@ -53,8 +53,7 @@ with st.sidebar:
     )
     
     selected_model = st.selectbox("Brain Model", [
-        "gemini-3.5-flash",
-        "gemini-3.1-pro",
+        "gemini-2.5-flash",
         "deepseek/deepseek-chat"       
     ])
 
