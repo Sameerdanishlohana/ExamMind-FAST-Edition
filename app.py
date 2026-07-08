@@ -2,8 +2,6 @@ import streamlit as st
 import os
 from openai import OpenAI 
 
-load_dotenv()
-
 st.set_page_config(
     page_title="Exam Mind | FAST Edition",
     page_icon="🎓",
